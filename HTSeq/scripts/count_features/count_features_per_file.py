@@ -371,11 +371,25 @@ def _assess_pe_read(
                 return True
     except KeyError:
         pass
-    if (read_sequence[0] and read_sequence[0].aQual < minaqual) or (
-        read_sequence[1] and read_sequence[1].aQual < minaqual
-    ):
+
+    if (read_sequence[0] and read_sequence[0].aQual < minaqual) or (read_sequence[1] and read_sequence[1].aQual < minaqual):
+        try:
+            # in the minaqual=0 regime, if the XA optional exists count the read
+            if (read_sequence[0] and read_sequence[0].optional_field("XA") is not None) or (read_sequence[1] and read_sequence[1].optional_field("XA") is not None):
+                return False
+            else:
+                # for balence; due to the structure of option_field()
+                # this will KeyError into the pass and add_low + True
+                # below and this pass will never run
+                pass
+
+        except KeyError:
+            pass
+
         read_stats.add_low_quality_read(read_sequence=read_sequence)
         return True
+    else:
+        pass
     return False
 
 
@@ -444,6 +458,18 @@ def _assess_non_pe_read(
     except KeyError:
         pass
     if read_sequence.aQual < minaqual:
+        try:
+            # in the minaqual=0 regime, if the XA optional exists count the read
+            if read_sequence.optional_field("XA") is not None:
+                return False
+            else:
+                # for balence; due to the structure of option_field()
+                # this will KeyError into the pass and add_low + True
+                # below and this pass will never run
+                pass
+
+        except KeyError:
+            pass
         read_stats.add_low_quality_read(read_sequence=read_sequence)
         return True
 
